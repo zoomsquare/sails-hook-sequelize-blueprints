@@ -2,7 +2,8 @@
  * Module dependencies
  */
 
-var _ = require('lodash')
+var prequire=require("parent-require"),
+    _ = require('lodash')
   , util = require('util')
   , async = require('async')
   , pluralize = require('pluralize')
