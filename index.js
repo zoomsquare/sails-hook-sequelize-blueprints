@@ -349,12 +349,12 @@ module.exports = function(sails) {
           if ( config.rest ) {
             sails.log.silly('Binding RESTful blueprint/shadow routes for model+controller:',controllerId);
 
-            _bindRoute(_getRestRoute('get %s'), 'find');
-            _bindRoute(_getRestRoute('get %s/:id'), 'findOne');
-            _bindRoute(_getRestRoute('post %s'), 'create');
-            _bindRoute(_getRestRoute('put %s/:id'), 'update');
-            _bindRoute(_getRestRoute('post %s/:id'), 'update');
-            _bindRoute(_getRestRoute('delete %s/:id?'), 'destroy');
+            _bindRoute(_getRestRoute('get %s'), 'find', {model: Model});
+            _bindRoute(_getRestRoute('get %s/:id'), 'findOne', {model: Model});
+            _bindRoute(_getRestRoute('post %s'), 'create', {model: Model});
+            _bindRoute(_getRestRoute('put %s/:id'), 'update', {model: Model});
+            _bindRoute(_getRestRoute('post %s/:id'), 'update', {model: Model});
+            _bindRoute(_getRestRoute('delete %s/:id?'), 'destroy', {model: Model});
 
             // Bind "rest" blueprint/shadow routes based on known associations in our model's schema
             // Bind add/remove for each `collection` associations
@@ -362,23 +362,24 @@ module.exports = function(sails) {
               var foreign = value.options.foreignKey;
               var alias = foreign.as || foreign.name || foreign;
               var _getAssocRoute = _.partialRight(util.format, baseRestRoute, alias);
-              var opts = _.merge({ alias: alias, target: value.target.name }, routeOpts);
+              var opts = _.merge({ alias: alias, target: value.target.name, association: value }, routeOpts);
               sails.log.silly('Binding RESTful association blueprint `'+alias+'` for',controllerId);
 
               _bindRoute(_getAssocRoute('post %s/:parentid/%s/:id?'), 'add', opts);
               _bindRoute(_getAssocRoute('delete %s/:parentid/%s/:id?'), 'remove', opts);
+              _bindRoute( _getAssocRoute('get %s/:parentid/%s/:id?'), 'populate', opts );
             });
 
             // and populate for both `collection` and `model` associations
-            _.mapKeys(Model.associations, function(value){
-              var foreign = value.options.foreignKey;
-              var alias = foreign.as || foreign.name || foreign;
-              var _getAssocRoute = _.partialRight(util.format, baseRestRoute, alias);
-              var opts = _.merge({ alias: alias, target: value.target.name }, routeOpts);
-              sails.log.silly('Binding RESTful association blueprint `'+alias+'` for',controllerId);
-
-              _bindRoute( _getAssocRoute('get %s/:parentid/%s/:id?'), 'populate', opts );
-            });
+            //_.mapKeys(Model.associations, function(value){
+            //  var foreign = value.options.foreignKey;
+            //  var alias = foreign.as || foreign.name || foreign;
+            //  var _getAssocRoute = _.partialRight(util.format, baseRestRoute, alias);
+            //  var opts = _.merge({ alias: alias, target: value.target.name }, routeOpts);
+            //  sails.log.silly('Binding RESTful association blueprint `'+alias+'` for',controllerId);
+            //
+            //  _bindRoute( _getAssocRoute('get %s/:parentid/%s/:id?'), 'populate', opts );
+            //});
           }
         }
       });
