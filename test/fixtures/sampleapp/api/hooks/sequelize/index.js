@@ -1,6 +1,6 @@
 module.exports = function(sails) {
   global['Sequelize'] = require('sequelize');
-  Sequelize.cls = require('continuation-local-storage').createNamespace('sails-sequelize-postgresql');
+  //Sequelize.cls = require('continuation-local-storage').createNamespace('sails-sequelize-postgresql');
   return {
     initialize: function(next) {
       this.initAdapters();
@@ -20,9 +20,14 @@ module.exports = function(sails) {
       migrate = sails.config.models.migrate;
       sails.log.verbose('Migration: ' + migrate);
 
-      sequelize = new Sequelize(connection.database, connection.user, connection.password, connection.options);
+      try {
+        sequelize = new Sequelize(connection.database, connection.user, connection.password, connection.options);
+      } catch (e) {
+        console.log(e)
+      }
       global['sequelize'] = sequelize;
       return sails.modules.loadModels(function(err, models) {
+
         var modelDef, modelName, ref;
         if (err != null) {
           return next(err);

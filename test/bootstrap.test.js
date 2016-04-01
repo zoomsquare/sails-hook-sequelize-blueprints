@@ -22,7 +22,7 @@ describe('Basic tests ::', function() {
         "orm": false,
         "pubsub": false,
         // Skip grunt (unless your hook uses it)
-        "grunt": false,
+        "grunt": false
       }
     },function (err, _sails) {
         if (err) return done(err);

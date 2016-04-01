@@ -17,14 +17,18 @@
   "author": "Cesar Augusto D. Azevedo",
   "license": "MIT",
   "devDependencies": {
+    "ejs": "^2.4.1",
     "mocha": "^2.2.5",
+    "pg": "^4.5.2",
+    "pg-hstore": "^2.3.2",
     "root-require": "^0.3.1",
+    "sails": "^0.12.1",
+    "sequelize": "^3.20.0",
     "should": "^7.0.2",
     "supertest": "^1.0.1"
   },
   "dependencies": {
     "async": "^1.4.0",
-    "continuation-local-storage": "^3.1.4",
     "lodash": "^3.10.0",
     "merge-defaults": "^0.2.1",
     "parent-require": "^1.0.0",
