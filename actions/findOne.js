@@ -20,6 +20,7 @@ var actionUtil = require('../actionUtil'),
  */
 
 module.exports = function findOneRecord (req, res) {
+
   var Model = actionUtil.parseModel(req);
   var pk = actionUtil.requirePk(req);
   var populate = actionUtil.populateEach(req);

@@ -32,14 +32,17 @@ var async = require('async');
  */
 
 module.exports = function addToCollection (req, res) {
+
   // Ensure a model and alias can be deduced from the request.
   var Model = actionUtil.parseModel(req);
   var relation = req.options.alias;
   if (!relation) {
     return res.serverError(new Error('Missing required route option, `req.options.alias`.'));
   }
+
   // The primary key of the parent record
   var parentPk = req.param('parentid');
+
   // Get the model class of the child in order to figure out the name of
   // the primary key attribute.
   var foreign = Model.associations[relation].options.foreignKey;
@@ -56,6 +59,8 @@ module.exports = function addToCollection (req, res) {
     var childAttr = childForeign.name || childForeign;
   }
   var childPkAttr = ChildModel.primaryKeys.id.fieldName;
+
+
   // The child record to associate is defined by either...
   var child;
 
@@ -71,6 +76,7 @@ module.exports = function addToCollection (req, res) {
     req.options.values.blacklist = req.options.values.blacklist || ['limit', 'skip', 'sort', 'id', 'parentid'];
     child = actionUtil.parseValues(req);
   }
+
   if (!child) {
     res.badRequest('You must specify the record to add (either the primary key of an existing record to link, or a new object without a primary key which will be used to create a record then link it.)');
   }
@@ -96,6 +102,7 @@ module.exports = function addToCollection (req, res) {
     // This is here because, although you can do this with `.save()`, you can't actually
     // get ahold of the created child record data, unless you create it first.
     actualChildPkValue: ['parent', function(cb) {
+
       // Below, we use the primary key attribute to pull out the primary key value
       // (which might not have existed until now, if the .add() resulted in a `create()`)
 

@@ -29,6 +29,7 @@ var actionUtil = require('../actionUtil'),
  */
 
 module.exports = function findRecords (req, res) {
+
   // Look up the model
   var Model = actionUtil.parseModel(req);
 

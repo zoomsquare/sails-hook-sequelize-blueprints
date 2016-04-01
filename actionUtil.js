@@ -18,7 +18,7 @@ var JSONP_CALLBACK_PARAM = 'callback';
  *
  * @type {Object}
  */
-module.exports = {
+var actionUtil = {
 
   /**
    * Given a request, return an object with appropriate/specified
@@ -334,3 +334,5 @@ function tryToParseJSON (json) {
   }
   catch (e) { return e; }
 }
+
+module.exports = actionUtil;

@@ -2,22 +2,22 @@
  * Module dependencies
  */
 
-var prequire=require("parent-require"),
-    _ = require('lodash')
-  , util = require('util')
-  , async = require('async')
-  , pluralize = require('pluralize')
-  , BlueprintController = {
-      create  : require('./actions/create')
-    , find    : require('./actions/find')
-    , findone : require('./actions/findOne')
-    , update  : require('./actions/update')
-    , destroy : require('./actions/destroy')
-    , populate: require('./actions/populate')
-    , add     : require('./actions/add')
-    , remove  : require('./actions/remove')
-  }
-  , STRINGFILE = require('sails-stringfile');
+var _ = require('lodash');
+var util = require('util');
+var pluralize = require('pluralize');
+var STRINGFILE = require('sails-stringfile');
+var BlueprintController = {
+  create: require('./actions/create'),
+  find: require('./actions/find'),
+  findone: require('./actions/findOne'),
+  update: require('./actions/update'),
+  destroy: require('./actions/destroy'),
+  populate: require('./actions/populate'),
+  add: require('./actions/add'),
+  remove: require('./actions/remove'),
+};
+var async = require("async");
+
 
 
 /**
@@ -123,18 +123,6 @@ module.exports = function(sails) {
       // Provide hook context to closures
       hook = this;
 
-      ////////////////////////////////////////////////////////////////////////
-      // TODO:
-      // Provide deprecation notice letting 0.9 users know that they need to
-      // move their blueprint configuration to `config.blueprints` instead of
-      // `config.controllers.blueprints`.  Similarly, need a message to let
-      // folks know to move their controller-specific blueprint config from
-      // `SomeController._config.blueprints` to `SomeController._config`.
-      // In both cases, we can "fix" the configuration in-memory, avoiding
-      // allowing the app to "still work". This can be done the same way we're
-      // doing it for adapter config.
-      ////////////////////////////////////////////////////////////////////////
-
       // Register route syntax for binding blueprints directly.
       sails.on('route:typeUnknown', onRoute);
 
@@ -169,6 +157,14 @@ module.exports = function(sails) {
 
     bindShadowRoutes: function() {
 
+      var logWarns = function(warns) {
+        sails.log.blank();
+        _.each(warns, function (warn) {
+          sails.log.warn(warn);
+        });
+        STRINGFILE.logMoreInfoLink(STRINGFILE.get('links.docs.config.blueprints'), sails.log.warn);
+      };
+
       _.each(sails.middleware.controllers, function eachController (controller, controllerId) {
         if ( !_.isObject(controller) || _.isArray(controller) ) return;
 
@@ -184,20 +180,20 @@ module.exports = function(sails) {
         if ( config.prefix ) {
           if ( !_(config.prefix).isString() ) {
             sails.after('lifted', function () {
-              sails.log.blank();
-              sails.log.warn(util.format('Ignoring invalid blueprint prefix configured for controller `%s`.', globalId));
-              sails.log.warn('`prefix` should be a string, e.g. "/api/v1".');
-              STRINGFILE.logMoreInfoLink(STRINGFILE.get('links.docs.config.blueprints'), sails.log.warn);
+              logWarns([
+                util.format('Ignoring invalid blueprint prefix configured for controller `%s`.', globalId),
+                '`prefix` should be a string, e.g. "/api/v1".'
+              ]);
             });
             return;
           }
           if ( !config.prefix.match(/^\//) ) {
             var originalPrefix = config.prefix;
             sails.after('lifted', function () {
-              sails.log.blank();
-              sails.log.warn(util.format('Invalid blueprint prefix ("%s") configured for controller `%s` (should start with a `/`).', originalPrefix, globalId));
-              sails.log.warn(util.format('For now, assuming you meant:  "%s".', config.prefix));
-              STRINGFILE.logMoreInfoLink(STRINGFILE.get('links.docs.config.blueprints'), sails.log.warn);
+              logWarns([
+                util.format('Invalid blueprint prefix ("%s") configured for controller `%s` (should start with a `/`).', originalPrefix, globalId),
+                util.format('For now, assuming you meant:  "%s".', config.prefix)
+              ]);
             });
 
             config.prefix = '/' + config.prefix;
@@ -208,20 +204,20 @@ module.exports = function(sails) {
         if ( config.restPrefix ) {
           if ( !_(config.restPrefix).isString() ) {
             sails.after('lifted', function () {
-              sails.log.blank();
-              sails.log.warn(util.format('Ignoring invalid blueprint rest prefix configured for controller `%s`.', globalId));
-              sails.log.warn('`restPrefix` should be a string, e.g. "/api/v1".');
-              STRINGFILE.logMoreInfoLink(STRINGFILE.get('links.docs.config.blueprints'), sails.log.warn);
+              logWarns([
+                util.format('Ignoring invalid blueprint rest prefix configured for controller `%s`.', globalId),
+                '`restPrefix` should be a string, e.g. "/api/v1".'
+              ]);
             });
             return;
           }
           if ( !config.restPrefix.match(/^\//) ) {
             var originalRestPrefix = config.restPrefix;
             sails.after('lifted', function () {
-              sails.log.blank();
-              sails.log.warn(util.format('Invalid blueprint restPrefix ("%s") configured for controller `%s` (should start with a `/`).', originalRestPrefix, globalId));
-              sails.log.warn(util.format('For now, assuming you meant:  "%s".', config.restPrefix));
-              STRINGFILE.logMoreInfoLink(STRINGFILE.get('links.docs.config.blueprints'), sails.log.warn);
+              logWarns([
+                util.format('Invalid blueprint restPrefix ("%s") configured for controller `%s` (should start with a `/`).', originalRestPrefix, globalId),
+                util.format('For now, assuming you meant:  "%s".', config.restPrefix)
+              ]);
             });
 
             config.restPrefix = '/' + config.restPrefix;
@@ -229,23 +225,25 @@ module.exports = function(sails) {
         }
 
         // Determine the names of the controller's user-defined actions
-        // IMPORTANT: Use `sails.controllers` instead of `sails.middleware.controllers`
-        // (since `sails.middleware.controllers` will have blueprints already mixed-in,
-        // and we want the explicit actions defined in the app)
+        // IMPORTANT: Note that we use `sails.controllers` rather than
+        // `sails.middleware.controllers` (since `sails.middleware.controllers`
+        // will have blueprints already mixed-in, and we want the explicit actions
+        // defined in the app)
         var actions = Object.keys(sails.controllers[controllerId]);
 
 
 
         // Determine base route
-        var baseRoute = config.prefix + '/' + controllerId;
-        // Determine base route for RESTful service
-        // Note that restPrefix will always start with /
-        var baseRestRoute = config.prefix + config.restPrefix + '/' + controllerId;
+        var baseRouteName = controllerId;
 
         if (config.pluralize) {
-          baseRoute = pluralize(baseRoute);
-          baseRestRoute = pluralize(baseRestRoute);
+          baseRouteName = pluralize(baseRouteName);
         }
+
+        var baseRoute = config.prefix + '/' + baseRouteName;
+        // Determine base route for RESTful service
+        // Note that restPrefix will always start with /
+        var baseRestRoute = config.prefix + config.restPrefix + '/' + baseRouteName;
 
         // Build route options for blueprint
         var routeOpts = config;
@@ -279,13 +277,14 @@ module.exports = function(sails) {
         // -> or implicitly by globalId
         // -> or implicitly by controller id
         var routeConfig = sails.router.explicitRoutes[controllerId] || {};
-        var modelFromGlobalId = sails.util.findWhere(sails.models, {globalId: globalId});
+        var modelFromGlobalId = _.findWhere(sails.models, {globalId: globalId});
         var modelId = config.model || routeConfig.model || (modelFromGlobalId && modelFromGlobalId.identity) || controllerId;
 
         // If the orm hook is enabled, it has already been loaded by this time,
         // so just double-check to see if the attached model exists in `sails.models`
         // before trying to attach any CRUD blueprint actions to the controller.
         if (!sails.hooks.orm && sails.hooks.sequelize && sails.models && sails.models[modelId]) {
+
           // If a model with matching identity exists,
           // extend route options with the id of the model.
           routeOpts.model = modelId;
@@ -339,9 +338,10 @@ module.exports = function(sails) {
               var alias = foreign.as || foreign.name || foreign;
               var _getAssocRoute = _.partialRight(util.format, baseRoute, alias);
               var opts = _.merge({ alias: alias, target: value.target.name }, routeOpts);
-              sails.log.verbose('Binding "shortcuts" to association blueprint `'+alias+'` for',controllerId);
-              _bindRoute(_getAssocRoute('%s/:parentid/%s/add/:id?'), 'add', opts);
-              _bindRoute(_getAssocRoute('%s/:parentid/%s/remove/:id?'), 'remove', opts);
+
+              sails.log.silly('Binding "shortcuts" to association blueprint `'+alias+'` for',controllerId);
+              _bindRoute( _getAssocRoute('%s/:parentid/%s/add/:id?'),      'add' , opts );
+              _bindRoute( _getAssocRoute('%s/:parentid/%s/remove/:id?'),   'remove', opts );
             });
           }
 
@@ -349,12 +349,6 @@ module.exports = function(sails) {
           if ( config.rest ) {
             sails.log.silly('Binding RESTful blueprint/shadow routes for model+controller:',controllerId);
 
-            //_bindRoute(_getRestRoute('get %s'), 'find', {model: Model});
-            //_bindRoute(_getRestRoute('get %s/:id'), 'findOne', {model: Model});
-            //_bindRoute(_getRestRoute('post %s'), 'create', {model: Model});
-            //_bindRoute(_getRestRoute('put %s/:id'), 'update', {model: Model});
-            //_bindRoute(_getRestRoute('post %s/:id'), 'update', {model: Model});
-            //_bindRoute(_getRestRoute('delete %s/:id?'), 'destroy', {model: Model});
             _bindRoute(_getRestRoute('get %s'), 'find');
             _bindRoute(_getRestRoute('get %s/:id'), 'findOne');
             _bindRoute(_getRestRoute('post %s'), 'create');
@@ -372,21 +366,20 @@ module.exports = function(sails) {
               var opts = _.merge({ alias: alias, target: value.target.name}, routeOpts);
               sails.log.silly('Binding RESTful association blueprint `'+alias+'` for',controllerId);
 
-              _bindRoute(_getAssocRoute('post %s/:parentid/%s/:id?'), 'add', opts);
-              _bindRoute(_getAssocRoute('delete %s/:parentid/%s/:id?'), 'remove', opts);
-              _bindRoute( _getAssocRoute('get %s/:parentid/%s/:id?'), 'populate', opts );
+              _bindRoute( _getAssocRoute('post %s/:parentid/%s/:id?'),     'add', opts );
+              _bindRoute( _getAssocRoute('delete %s/:parentid/%s/:id?'),   'remove', opts );
             });
 
             // and populate for both `collection` and `model` associations
-            //_.mapKeys(Model.associations, function(value){
-            //  var foreign = value.options.foreignKey;
-            //  var alias = foreign.as || foreign.name || foreign;
-            //  var _getAssocRoute = _.partialRight(util.format, baseRestRoute, alias);
-            //  var opts = _.merge({ alias: alias, target: value.target.name }, routeOpts);
-            //  sails.log.silly('Binding RESTful association blueprint `'+alias+'` for',controllerId);
-            //
-            //  _bindRoute( _getAssocRoute('get %s/:parentid/%s/:id?'), 'populate', opts );
-            //});
+            _.mapKeys(Model.associations, function(value){
+              var foreign = value.options.foreignKey;
+              var alias = foreign.as || foreign.name || foreign;
+              var _getAssocRoute = _.partialRight(util.format, baseRestRoute, alias);
+              var opts = _.merge({ alias: alias, target: value.target.name }, routeOpts);
+              sails.log.silly('Binding RESTful association blueprint `'+alias+'` for',controllerId);
+
+              _bindRoute( _getAssocRoute('get %s/:parentid/%s/:id?'), 'populate', opts );
+            });
           }
         }
       });
@@ -461,4 +454,3 @@ module.exports = function(sails) {
   }
 
 };
-
