@@ -226,15 +226,6 @@ module.exports = function(sails) {
           }
         }
 
-        // Determine the names of the controller's user-defined actions
-        // IMPORTANT: Note that we use `sails.controllers` rather than
-        // `sails.middleware.controllers` (since `sails.middleware.controllers`
-        // will have blueprints already mixed-in, and we want the explicit actions
-        // defined in the app)
-        var actions = Object.keys(sails.controllers[controllerId]);
-
-
-
         // Determine base route
         var baseRouteName = controllerId;
 
@@ -250,28 +241,6 @@ module.exports = function(sails) {
         // Build route options for blueprint
         var routeOpts = config;
 
-        // Bind "actions" and "index" shadow routes for each action
-        _.each(actions, function eachActionID (actionId) {
-
-          var opts = _.merge({
-            action: actionId,
-            controller: controllerId
-          }, routeOpts);
-
-          // Bind a route based on the action name, if `actions` shadows enabled
-          if (config.actions) {
-            var actionRoute = baseRoute + '/' + actionId.toLowerCase() + '/:id?';
-            sails.log.silly('Binding action ('+actionId.toLowerCase()+') blueprint/shadow route for controller:',controllerId);
-            sails.router.bind(actionRoute, controller[actionId.toLowerCase()], null, opts);
-          }
-
-          // Bind base route to index action, if `index` shadows are not disabled
-          if (config.index !== false && actionId.match(/^index$/i)) {
-            sails.log.silly('Binding index blueprint/shadow route for controller:',controllerId);
-            sails.router.bind(baseRoute, controller.index, null, opts);
-          }
-        });
-
         // Determine the model connected to this controller either by:
         // -> explicit configuration
         // -> on the controller
@@ -281,6 +250,39 @@ module.exports = function(sails) {
         var routeConfig = sails.router.explicitRoutes[controllerId] || {};
         var modelFromGlobalId = _.findWhere(sails.models, {globalId: globalId});
         var modelId = config.model || routeConfig.model || (modelFromGlobalId && modelFromGlobalId.identity) || controllerId;
+
+        // Determine the names of the controller's user-defined actions
+        // IMPORTANT: Note that we use `sails.controllers` rather than
+        // `sails.middleware.controllers` (since `sails.middleware.controllers`
+        // will have blueprints already mixed-in, and we want the explicit actions
+        // defined in the app)
+
+        // DISABLE THIS, since we will require action routes to be defined explicitly in config/routes.js
+
+        //var actions = _.difference(Object.keys(sails.controllers[controllerId]), ["sails","globalId","identity"]);
+        //
+        //// Bind "actions" and "index" shadow routes for each action
+        //_.each(actions, function eachActionID (actionId) {
+        //
+        //  var opts = _.merge({
+        //    action: actionId,
+        //    controller: controllerId,
+        //    model: modelId
+        //  }, routeOpts);
+        //
+        //  // Bind a route based on the action name, if `actions` shadows enabled
+        //  if (config.actions) {
+        //    var actionRoute = baseRoute + '/' + actionId.toLowerCase() + '/:id?';
+        //    sails.log.silly('Binding action ('+actionId.toLowerCase()+') blueprint/shadow route for controller:',controllerId);
+        //    sails.router.bind(actionRoute, controller[actionId.toLowerCase()], null, opts);
+        //  }
+        //
+        //  // Bind base route to index action, if `index` shadows are not disabled
+        //  if (config.index !== false && actionId.match(/^index$/i)) {
+        //    sails.log.silly('Binding index blueprint/shadow route for controller:',controllerId);
+        //    sails.router.bind(baseRoute, controller.index, null, opts);
+        //  }
+        //});
 
         // If the orm hook is enabled, it has already been loaded by this time,
         // so just double-check to see if the attached model exists in `sails.models`
