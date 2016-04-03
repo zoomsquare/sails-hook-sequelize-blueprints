@@ -17,7 +17,7 @@ describe('Basic tests ::', function() {
       hooks: {
         "sequelize": require('./fixtures/sampleapp/api/hooks/sequelize'),
         // Load the hook
-        "sails-hook-sequelize-blueprint": require('../'),
+        "sequelize-blueprint": require('../'),
         "blueprints": false,
         "orm": false,
         "pubsub": false,
@@ -25,9 +25,13 @@ describe('Basic tests ::', function() {
         "grunt": false
       }
     },function (err, _sails) {
-        if (err) return done(err);
-        sails = _sails;
-        return done(err, sails);
+        if (err) {
+          console.log(err);
+          done(err);
+        } else {
+          sails = _sails;
+          done(err, sails);
+        }
     });
   });
 
