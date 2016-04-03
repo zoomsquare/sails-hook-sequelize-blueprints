@@ -137,8 +137,10 @@ module.exports = function(sails) {
       if (sails.hooks.policies) {
         eventsToWaitFor.push('hook:policies:bound');
       }
-      if (sails.hooks.orm) {
-        eventsToWaitFor.push('hook:orm:loaded');
+      if (sails.hooks.sequelize) {
+        eventsToWaitFor.push('hook:sequelize:loaded');
+      } else {
+        throw new Error("please install zoomsquare/sails-hook-sequelize")
       }
       if (sails.hooks.controllers) {
         eventsToWaitFor.push('hook:controllers:loaded');
