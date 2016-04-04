@@ -86,8 +86,12 @@ module.exports = function updateOneRecord (req, res) {
       // and serious underlying issues. Respond with badRequest if a
       // validation error is encountered, w/ validation info.
       if (err instanceof Sequelize.ValidationError) {
-        err.status = 400;
-      }
+            err = {
+                status: 400,
+                message: err.message,
+                errors: err.errors
+            }
+        }
       return res.negotiate(err);
     });
   }).catch(function(err){
