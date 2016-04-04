@@ -54,7 +54,7 @@ module.exports = function remove(req, res) {
     return res.serverError('Missing required child PK.');
   }
 
-  Model.findById(parentPk, { include: [{ all: true }]}).then(function(parentRecord) {
+  Model.findById(parentPk, { include: [{ all: true, nested: true }]}).then(function(parentRecord) {
     if (!parentRecord) return res.notFound();
     if (!parentRecord[relation]) return res.notFound();
 
@@ -79,7 +79,7 @@ module.exports = function remove(req, res) {
   });
 
   function returnParentModel () {
-    Model.findById(parentPk, { include: req._sails.config.blueprints.populate ? [{ all: true }] : [] })
+    Model.findById(parentPk, { include: req._sails.config.blueprints.populate ? [{ all: true, nested: true }] : [] })
     // .populate(relation)
     // TODO: use populateEach util instead
     .then(function(parentRecord) {

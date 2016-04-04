@@ -88,7 +88,7 @@ module.exports = function addToCollection (req, res) {
 
     // Look up the parent record
     parent: function (cb) {
-      Model.findById(parentPk, { include: [{ all : true }]}).then(function(parentRecord) {
+      Model.findById(parentPk, { include: [{ all : true, nested: true }]}).then(function(parentRecord) {
         if (!parentRecord) return cb({status: 404});
         if (!parentRecord[relation]) { return cb({status: 404}); }
         cb(null, parentRecord);
@@ -191,7 +191,7 @@ module.exports = function addToCollection (req, res) {
   }, function(err, results){
     // if (err) return res.negotiate(err);
 
-    Model.findById(parentPk, { include: req._sails.config.blueprints.populate ? [{ all: true }] : []}).then(function(matchingRecord) {
+    Model.findById(parentPk, { include: req._sails.config.blueprints.populate ? [{ all: true, nested: true }] : []}).then(function(matchingRecord) {
       if(!matchingRecord) return res.serverError();
       return res.ok(matchingRecord);
     }).catch(function(err) {
