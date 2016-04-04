@@ -85,6 +85,9 @@ module.exports = function updateOneRecord (req, res) {
       // Differentiate between waterline-originated validation errors
       // and serious underlying issues. Respond with badRequest if a
       // validation error is encountered, w/ validation info.
+      if (err instanceof Sequelize.ValidationError) {
+        err.status = 400;
+      }
       return res.negotiate(err);
     });
   }).catch(function(err){
