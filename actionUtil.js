@@ -307,8 +307,7 @@ var actionUtil = {
    * @param  {Request} req
   */
   parsePage: function (req) {
-    var DEFAULT_PAGE = 1;
-    var page = req.param('page') || (typeof req.options.page !== 'undefined' ? req.options.page : DEFAULT_PAGE);
+    var page = req.param('page') || req.options.page;
     if (page) { page = +page; }
     return page;
   }
