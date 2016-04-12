@@ -189,7 +189,7 @@ module.exports = function addToCollection (req, res) {
       }
     }]
   }, function(err, results){
-    // if (err) return res.negotiate(err);
+    if (err) return res.negotiate(err);
 
     Model.findById(parentPk, { include: req._sails.config.blueprints.populate ? [{ all: true, nested: true }] : []}).then(function(matchingRecord) {
       if(!matchingRecord) return res.serverError();
