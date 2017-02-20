@@ -49,8 +49,9 @@ module.exports = function updateOneRecord (req, res) {
   Model.findById(pk).then(function(matchingRecord) {
 
     if (!matchingRecord) return res.notFound();
-
-    Model.update(values, { where: { id: pk }}).then(function(records) {
+    query ={where:{}}
+    query.where[Model.primaryKeyField]=pk
+    Model.update(values, query).then(function(records) {
       // Because this should only update a single record and update
       // returns an array, just use the first item.  If more than one
       // record was returned, something is amiss.
